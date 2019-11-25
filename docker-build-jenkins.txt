@@ -1,0 +1,75 @@
+pipeline{
+    agent any
+    stages{
+        stage('scm checkout'){
+            steps{
+                git 'https://github.com/yankils/hello-world.git'
+            }
+        }
+        stage('compile code'){
+            steps{
+                sh 'mvn clean compile'
+
+            }
+    
+        }
+        stage('package code'){
+            steps{
+                sh 'mvn package'
+            }
+          
+        }
+        stage('publish over ssh on dockerhost'){
+            steps{
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'Dockerhost', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '.', remoteDirectorySDF: false, removePrefix: '', sourceFiles: 'webapp/target/*.war')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+            }
+        }
+
+    }
+}
+
+
+
+
+
+================================================================================
+
+
+
+
+
+CREATE JENKINS SERVER
+CREATE DOCKER SERVER
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+GO TO DOCKER SERVER
+=======================
+
+(1) publish over ssh agent plugin on jenkins
+
+
+
+click on ssh servers
+
+Name : hostname of the Dockerserver eg:(Dockerhost)
+
+hostname : 10.0.1.24
+
+username : dockeradmin
+
+passphrase/password : dockeradmin
+
+goto docker server
+==========================
+
+cat /etc/ssh/sshd_Config
+
+enable password authentication yes
+
+
+systemctl reload sshd
+
+===============================================
+

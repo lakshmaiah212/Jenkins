@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: 01-web
+spec:
+  containers:
+  - name: webserver
+    image: httpd
+    resources :
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+    ports:
+        - containerPort: 80

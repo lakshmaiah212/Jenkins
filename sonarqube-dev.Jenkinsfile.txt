@@ -1,0 +1,50 @@
+
+properties([parameters([choice(choices: 'master\nrelease-1\nrelease-2', description: 'branches', name: 'branch')])])
+currentBuild.displayName = "firstproject-#"+currentBuild.number
+pipeline{
+    agent any
+    stages{
+        stage('scm-checkout'){
+            steps{
+                git url : 'https://github.com/lakshmaiah212/myweb.git' ,  branch:"${params.branch}"
+            }
+        }
+        stage('code-compile'){
+            steps{
+                sh "mvn compile"
+            }
+        }
+        stage('Build-package'){
+            steps{
+                sh "mvn clean package"
+                sh "mv target/myweb*.war target/myweb.war"
+            }
+        }
+        stage('Static code analysis'){
+            steps{
+                withSonarQubeEnv('sonar') {
+                    sh """
+                     mvn sonar:sonar -Dsonar.projectKey=myweb  -Dsonar.host.url=http://18.234.160.143:9000 -Dsonar.login=00a78c9f06d23e9dbf7e546de9a11c68f7c42efc
+
+                    """
+                }
+            }
+        
+        }
+        stage('Deploy dev'){
+            steps{
+                sshagent(['sshagent']) {
+                    sh """
+                        scp -o StrictHostKeyChecking=no target/myweb.war ec2-user@18.207.100.23:/opt/apache-tomcat-8.5.47/webapps/
+
+                        ssh  ec2-user@18.207.100.23 /opt/apache-tomcat-8.5.47/bin/startup.sh
+
+                    """
+    
+                }
+            }
+        }
+ 
+
+    }
+}

@@ -1,0 +1,76 @@
+go to download sonarqube
+
+select t2.small 
+
+
+sudo yum list  | grep java-1.8
+
+sudo yum install devel -y 
+
+updateing 
+==========
+
+sudo update-alternatives --config java 
+
+sonarqube installation
+================================
+
+cd /opt
+
+
+sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-8.0.zip
+
+unzip sonarsource-8.0
+
+sudo chown -R ec2-user:ec2-user sonarqube-8.0
+
+
+cd sonarqube 
+
+cd bin
+
+cd linux-x86-64
+
+./sonar.sh start
+
+========================================================================
+
+sonarqube jenkins
+======================
+
+install sonarqube scanner plugin 
+
+go to configure system
+
+goto sonarqubeservers
+
+give name and sonarqubelocalhost
+
+authentication token
+
+=============================================
+
+node{
+    stage('scm-checkout'){
+        git "https://github.com/lakshmaiah212/my-app.git"
+    }
+    stage('compile-package'){
+        def mavenhome = tool name: 'maven', type: 'maven'
+        sh "${mavenhome}/bin/mvn package"
+    }
+    stage('Sonar Qube Analysis'){
+         def mavenhome = tool name: 'maven', type: 'maven'
+         withSonarQubeEnv('sonar-8') { 
+          sh "mvn sonar:sonar -Dsonar.projectKey=studentproject -Dsonar.host.url=http://52.3.235.41:9000 Dsonar.login=dd40413f0bc20b7c57c3f1d051647bb8be6643fb"
+        }
+
+    }
+    stage("Quality Gate status check"){
+          timeout(time: 1, unit: 'HOURS') {
+              def qg = waitForQualityGate()
+              if (qg.status != 'OK') {
+                  error "Pipeline aborted due to quality gate failure: ${qg.status}"
+              }
+          }
+      }        
+}
